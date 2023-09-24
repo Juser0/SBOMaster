@@ -3,5 +3,5 @@ package com.pipeline.manager.controller;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class GitHubController {
+public class SbomController {
 }
