@@ -1,4 +1,4 @@
-package com.pipeline.manager.exception;
+package com.analyzer.sbom.exception;
 
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
