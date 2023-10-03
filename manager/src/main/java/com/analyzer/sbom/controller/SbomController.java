@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.*;
@@ -35,7 +36,7 @@ public class SbomController {
 
     @GetMapping("/report")
     @Operation(summary = "Get SBOM Report", description = "Get Software Bill of Materials' security report")
-    public ResponseEntity<CommonResponse<List<SbomResponseDto>>> getReport(@RequestParam String token, @RequestParam String projectId, @RequestParam String baseUrl) throws JsonProcessingException {
+    public ResponseEntity<CommonResponse<List<SbomResponseDto>>> getReport(@RequestParam String token, @RequestParam String projectId, @RequestParam String baseUrl) throws IOException {
         List<SbomResponseDto> sbomReport = sbomService.generateReport(token, projectId, baseUrl);
         return ResponseEntity.status(OK).body(CommonResponse.resWithData("SBOM_REPORT_GENERATED", "SBOM 보안 보고서가 생성되었습니다", sbomReport));
     }

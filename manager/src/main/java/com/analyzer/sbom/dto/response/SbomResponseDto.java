@@ -17,10 +17,10 @@ public class SbomResponseDto {
     private String source;
     private String referenceUrl;
     private String suggestion;
-    private List<String> recommendUrl;
+    private List<String> suggestionUrl;
 
     @Builder
-    public SbomResponseDto(String name, String purl, String version, String group, String vulnId, String severity, String description, String source, String referenceUrl, String suggestion, List<String> recommendUrl) {
+    public SbomResponseDto(String name, String purl, String version, String group, String vulnId, String severity, String description, String source, String referenceUrl, String suggestion, List<String> suggestionUrl) {
         this.name = name;
         this.purl = purl;
         this.version = version;
@@ -31,6 +31,6 @@ public class SbomResponseDto {
         this.source = source;
         this.referenceUrl = referenceUrl;
         this.suggestion = suggestion;
-        this.recommendUrl = recommendUrl;
+        this.suggestionUrl = suggestionUrl;
     }
 }
