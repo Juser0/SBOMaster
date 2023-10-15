@@ -1,6 +1,12 @@
 package com.analyzer.sbom.service;
 
+import com.analyzer.sbom.domain.Reference;
+import com.analyzer.sbom.domain.Suggestion;
+import com.analyzer.sbom.dto.request.ReferenceRequestDto;
+import com.analyzer.sbom.dto.request.SuggestionRequestDto;
 import com.analyzer.sbom.dto.response.SbomResponseDto;
+import com.analyzer.sbom.repository.ReferenceRepository;
+import com.analyzer.sbom.repository.SuggestionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,6 +29,8 @@ public class SbomService {
 
     private final WebClient.Builder webClientBuilder;
     private final ObjectMapper objectMapper;
+    private final SuggestionRepository suggestionRepository;
+    private final ReferenceRepository referenceRepository;
 
     @Value("${webclient.nvd}")
     private String cveUrl;
@@ -71,11 +79,11 @@ public class SbomService {
 
                 String referenceUrl = cveUrl + vulnId;
 
-                List<String> suggestionUrl = getSuggestionUrl(referenceUrl);
-                suggestionUrl.add(getSuggestion(snykUrl + vulnId, true));
+                List<String> suggestionUrl = getSuggestionUrl(vulnId, referenceUrl);
+                suggestionUrl.add(getSuggestion(vulnId, snykUrl + vulnId, true));
                 if(!Objects.equals(suggestionLink, "")) suggestionUrl.add(suggestionLink);
 
-                String suggestion = getSuggestion(snykUrl + vulnId, false);
+                String suggestion = getSuggestion(vulnId, snykUrl + vulnId, false);
 
                 SbomResponseDto sbomResponseDto = SbomResponseDto.builder()
                         .name(name)
@@ -110,28 +118,44 @@ public class SbomService {
                 .block();
     }
 
-    private List<String> getSuggestionUrl(String cveUrl) throws IOException {
-        Document doc = Jsoup.connect(cveUrl).get();
-        Element table = doc.select(nvdSelector).first();
-        Elements tdElements = Objects.requireNonNull(table).select("td");
+    private List<String> getSuggestionUrl(String vulnId, String cveUrl) throws IOException {
+        if(!referenceRepository.existsByCveId(vulnId)) {
+            Document doc = Jsoup.connect(cveUrl).get();
+            Element table = doc.select(nvdSelector).first();
+            Elements tdElements = Objects.requireNonNull(table).select("td");
 
-        return tdElements.stream()
-                .flatMap(td -> td.select("a").stream())
-                .map(Element::text)
+            List<String> referenceList = tdElements.stream()
+                    .flatMap(td -> td.select("a").stream())
+                    .map(Element::text)
+                    .collect(Collectors.toList());
+
+            for (String url : referenceList) {
+                ReferenceRequestDto requestDto = new ReferenceRequestDto(vulnId, url);
+                referenceRepository.save(requestDto.toEntity());
+            }
+        }
+        return referenceRepository.findAllByCveId(vulnId).stream()
+                .map(Reference::getReferenceUrl)
                 .collect(Collectors.toList());
     }
 
-    private String getSuggestion(String snykUrl, Boolean isLink) throws IOException {
-        Document doc = Jsoup.connect(snykUrl).get();
-        String link = String.join("", doc.selectXpath(snykXpath).eachAttr("href"));
-        String suggestionLink = snykBase + link;
+    private String getSuggestion(String vulnId, String snykUrl, Boolean isLink) throws IOException {
+        if(!suggestionRepository.existsByCveId(vulnId)) {
+            Document doc = Jsoup.connect(snykUrl).get();
+            String link = String.join("", doc.selectXpath(snykXpath).eachAttr("href"));
+            String suggestionLink = snykBase + link;
 
-        if(isLink) return suggestionLink;
+            if (isLink) return suggestionLink;
 
-        Document solutionDoc = Jsoup.connect(suggestionLink).get();
-        String suggestion = solutionDoc.selectXpath(snykSearchXpath).text();
+            Document solutionDoc = Jsoup.connect(suggestionLink).get();
+            String suggestion = solutionDoc.selectXpath(snykSearchXpath).text();
 
-        return isLink ? suggestionLink : suggestion;
+            SuggestionRequestDto requestDto = new SuggestionRequestDto(vulnId, suggestion, suggestionLink);
+            suggestionRepository.save(requestDto.toEntity());
+        }
+        Suggestion suggestion = suggestionRepository.findByCveId(vulnId)
+                .orElseThrow(() -> new RuntimeException("Data Not Found"));
+        return isLink ? suggestion.getSuggestionUrl() : suggestion.getSuggestion();
     }
 
     private String parseText(JsonNode source, String subject) {

@@ -68,3 +68,4 @@ out/
 ### Configuration Files ###
 application-dev.yml
 gradle.properties
+data.sql

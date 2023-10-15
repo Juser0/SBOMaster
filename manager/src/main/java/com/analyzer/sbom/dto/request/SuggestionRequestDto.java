@@ -17,7 +17,13 @@ public class SuggestionRequestDto {
     @NotBlank
     private String suggestionUrl;
 
-    public Suggestion toEntity(SuggestionRequestDto requestDto) {
-        return new Suggestion(requestDto);
+    public SuggestionRequestDto(String cveId, String suggestion, String suggestionUrl) {
+        this.cveId = cveId;
+        this.suggestion = suggestion;
+        this.suggestionUrl = suggestionUrl;
+    }
+
+    public Suggestion toEntity() {
+        return new Suggestion(this);
     }
 }
