@@ -30,6 +30,9 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+!**/wrapper/
+!**/wrapper/**/
+!**/wrapper/gradle-wrapper.jar
 
 ### STS ###
 .apt_generated
@@ -64,5 +67,4 @@ out/
 
 ### Configuration Files ###
 application-dev.yml
-application-prod.yml
 gradle.properties

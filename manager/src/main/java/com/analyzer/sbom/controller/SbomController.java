@@ -31,13 +31,13 @@ public class SbomController {
     @Operation(summary = "SBOM Scan", description = "Scan Software Bill of Materials")
     public ResponseEntity<CommonResponse<JsonNode>> scanSBOM(@RequestParam String token, @RequestParam String projectId, @RequestParam String baseUrl) throws JsonProcessingException {
         JsonNode sbomResult = sbomService.scanVulnerability(token, projectId, baseUrl);
-        return ResponseEntity.status(OK).body(CommonResponse.resWithData("SBOM_SCAN_COMPLETED", "SBOM 스캔이 완료되었습니다", sbomResult));
+        return ResponseEntity.status(OK).body(CommonResponse.from("SBOM_SCAN_COMPLETED", sbomResult));
     }
 
     @GetMapping("/report")
     @Operation(summary = "Get SBOM Report", description = "Get Software Bill of Materials' security report")
     public ResponseEntity<CommonResponse<List<SbomResponseDto>>> getReport(@RequestParam String token, @RequestParam String projectId, @RequestParam String baseUrl) throws IOException {
         List<SbomResponseDto> sbomReport = sbomService.generateReport(token, projectId, baseUrl);
-        return ResponseEntity.status(OK).body(CommonResponse.resWithData("SBOM_REPORT_GENERATED", "SBOM 보안 보고서가 생성되었습니다", sbomReport));
+        return ResponseEntity.status(OK).body(CommonResponse.from("SBOM_REPORT_GENERATED", sbomReport));
     }
 }
