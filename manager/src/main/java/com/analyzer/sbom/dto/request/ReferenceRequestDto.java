@@ -13,7 +13,12 @@ public class ReferenceRequestDto {
     @NotBlank
     private String referenceUrl;
 
-    public Reference toEntity(ReferenceRequestDto requestDto) {
-        return new Reference(requestDto);
+    public ReferenceRequestDto(String cveId, String referenceUrl) {
+        this.cveId = cveId;
+        this.referenceUrl = referenceUrl;
+    }
+
+    public Reference toEntity() {
+        return new Reference(this);
     }
 }
