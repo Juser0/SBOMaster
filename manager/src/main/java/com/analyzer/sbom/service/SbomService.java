@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,22 +53,21 @@ public class SbomService {
         List<SbomResponseDto> sbomReport = new ArrayList<>();
 
         JsonNode jsonNode = objectMapper.readTree(sbomResult).get("findings");
-        if (jsonNode.isArray()) {
             for (JsonNode finding : jsonNode) {
                 JsonNode component = finding.get("component");
-                String name =  isExist(component, "name") ? component.get("name").asText() : "";
-                String version = isExist(component, "version") ? component.get("version").asText() : "";
-                String purl = isExist(component, "purl") ? component.get("purl").asText() : "";
-                String group = isExist(component, "group") ? component.get("group").asText() : "";
+                String name =  parseText(component, "name");
+                String version = parseText(component, "text");
+                String purl = parseText(component, "purl");
+                String group = parseText(component, "group");
 
                 JsonNode attribution = finding.get("attribution");
-                String suggestionLink = isExist(attribution, "referenceUrl") ? attribution.get("referenceUrl").asText() : "";
+                String suggestionLink = parseText(attribution, "referenceUrl");
 
                 JsonNode vulnerability = finding.get("vulnerability");
-                String severity = isExist(vulnerability, "severity") ? vulnerability.get("severity").asText() : "";
-                String vulnId = isExist(vulnerability, "vulnId") ? vulnerability.get("vulnId").asText() : "";
-                String source = isExist(vulnerability, "source") ? vulnerability.get("source").asText() : "";
-                String description = isExist(vulnerability, "description") ? vulnerability.get("description").asText() : "";
+                String severity = parseText(vulnerability, "severity");
+                String vulnId = parseText(vulnerability, "vulnId");
+                String source = parseText(vulnerability, "source");
+                String description = parseText(vulnerability, "description");
 
                 String referenceUrl = cveUrl + vulnId;
 
@@ -96,7 +93,6 @@ public class SbomService {
 
                 sbomReport.add(sbomResponseDto);
             }
-        }
         return sbomReport;
     }
 
@@ -112,10 +108,6 @@ public class SbomService {
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
-    }
-
-    private boolean isExist(JsonNode source, String fieldName) {
-        return source.has(fieldName);
     }
 
     private List<String> getSuggestionUrl(String cveUrl) throws IOException {
@@ -134,10 +126,15 @@ public class SbomService {
         String link = String.join("", doc.selectXpath(snykXpath).eachAttr("href"));
         String suggestionLink = snykBase + link;
 
+        if(isLink) return suggestionLink;
+
         Document solutionDoc = Jsoup.connect(suggestionLink).get();
         String suggestion = solutionDoc.selectXpath(snykSearchXpath).text();
 
         return isLink ? suggestionLink : suggestion;
     }
 
+    private String parseText(JsonNode source, String subject) {
+        return source.has(subject) ? source.get(subject).asText() : "";
+    }
 }
