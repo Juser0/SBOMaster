@@ -19,7 +19,7 @@ docker create network <network-name>
 #### Run Application and MySQL container
 ```bash
 docker run -d --network <network-name> [--name <container-name>] -p <port>:8080 justuser0129/sbomaster[:version]
-docker run -d --network <network-name> --name mysql-container -p <port>:3306 mysql[:version]
+docker run -d --network <network-name> --name mysql-container -p <port>:3306 -e MYSQL_ROOT_PASSWORD=root mysql[:version]
 ```
 
 ### 2. Run using Docker-compose
